@@ -1,39 +1,29 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { IUser } from './interfaces/users.interface';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { CreateUserDto } from './dto/create-user.dto';
+import { DeleteUserDto } from './dto/delete-user.dto';
+
 
 @Injectable()
 export class UsersService {
-    private users: IUser[] = []; // "database"
+    constructor(@InjectModel('User') private readonly userModel: Model<IUser>) {}
 
-    insertUser(email: string, firstName: string, lastName: string, age: number) {
-        const newUser = <IUser> {
-            email,
-            firstName,
-            lastName,
-            age
-        };
-        this.users.push(newUser);
-        return newUser.email;
+    async insertUser(createUserDto: CreateUserDto): Promise<IUser> {
+        const createdUser = new this.userModel(createUserDto);
+        return createdUser.save();
     }
 
-    getAllUsers () {
-        return [...this.users];
+    async getAllUsers(): Promise<IUser[]> {
+        return this.userModel.find().exec();
     }
 
-    getUser (reqUsersEmail: string) {
-        const user = this.users.find( user => user.email === reqUsersEmail);
-        if (!user) {
-            throw new NotFoundException('Could not find user');
-        }
-        return { ...user };
+    async getUser(reqEmail: string): Promise<IUser> {
+        return this.userModel.find({ email: reqEmail }).exec();
     }
 
-    deleteUser (reqUsersEmail: string) {
-        const index = this.users.findIndex( user => user.email === reqUsersEmail);
-        if (!this.users[index]) {
-            throw new NotFoundException('Could not find user');
-        }
-        this.users.splice(index, 1);
-        return { message: 'Deleted'}
+    async deleteUser (deleteUserDto: DeleteUserDto): Promise<IUser> {
+        return this.userModel.findOneAndRemove({ email: deleteUserDto.email });
     }
 }
