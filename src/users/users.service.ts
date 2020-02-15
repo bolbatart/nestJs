@@ -14,8 +14,8 @@ export class UsersService {
         return this.userModel.find().exec();
     }
 
-    async getUser(reqEmail: string): Promise<IUser> {
-        return this.userModel.find({ email: reqEmail }).exec();
+    async getUser(user: {userId: string}): Promise<IUser> {
+        return this.userModel.find({ _id: user.userId}).exec();
     }
 
     async deleteUser (deleteUserDto: DeleteUserDto): Promise<IUser> {

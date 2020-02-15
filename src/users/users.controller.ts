@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { DeleteUserDto } from './dto/delete-user.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 
 @Controller('users')
@@ -10,10 +10,11 @@ export class UsersController {
     private readonly usersService: UsersService
   ) { }
 
-  @UseGuards(AuthGuard('jwt'))
   @Get('profile')
+  @UseGuards(new AuthGuard)
   getProfile(@Request() req) {
-    return req.user;
+    //get data from db by id;
+    return this.usersService.getUser(req.user);
   }
   
   @Get()
