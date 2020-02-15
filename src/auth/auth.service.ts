@@ -13,7 +13,7 @@ export class AuthService {
     @InjectModel('User') private readonly userModel: Model<IUser>
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<any> {
+  async register(registerDto: RegisterDto, req: any): Promise<any> {
     const exist = await this.userModel.findOne({ email: registerDto.email })
     if (exist) throw new HttpException('This email is already exists', HttpStatus.BAD_REQUEST)
     const createdUser = new this.userModel(registerDto);
@@ -21,16 +21,40 @@ export class AuthService {
     return this.generateTokens({ email: createdUser.email, userId: createdUser._id });
   }
 
-  async login(loginDto: LoginDto): Promise<any> {
+  async login(loginDto: LoginDto, req: any): Promise<any> {
     const user = await this.userModel.findOne({ email: loginDto.email, password: loginDto.password })
-    if (!user) throw new HttpException('Wrong email or password', HttpStatus.BAD_REQUEST)
-    else return this.generateTokens({ email: user.email, userId: user.userId })
+    if (!user) throw new HttpException('Wrong email or password', HttpStatus.BAD_REQUEST) 
+    return this.generateTokens({ email: user.email, userId: user.userId })
   }
 
   async generateTokens(payload: {}) {
     const accessToken = sign(payload, 'secret', { expiresIn: '60s' })
     const refreshToken = sign(payload, 'secret', { expiresIn: '1d' })
     return { accessToken, refreshToken };
+  }
+
+  async addCookies(req: any, tokens: any) {
+    return [
+      {
+          name: 'access-token',
+          value: tokens.accessToken,
+          options: {
+              httpOnly: true,
+              secure: false,
+              maxAge: 60000, // 60s
+          },
+      },
+      {
+          name: 'refresh-token',
+          value: tokens.refreshToken,
+          options: {
+              httpOnly: true,
+              secure: false,
+              maxAge: 86400000, // 1d
+          },
+      }
+
+  ];
   }
   
 }

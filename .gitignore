@@ -2,6 +2,9 @@
 /dist
 /node_modules
 
+# My Files
+todo
+
 # Logs
 logs
 *.log
@@ -32,5 +35,3 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-
-./todo
