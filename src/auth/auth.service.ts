@@ -6,6 +6,7 @@ import { Model } from 'mongoose';
 import { IUser } from '../users/interfaces/users.interface';
 import { RegisterDto } from 'src/users/dto/register-user.dto';
 import * as crypto from 'crypto';
+import * as jwt from 'jsonwebtoken';
 
 
 @Injectable()
@@ -16,7 +17,7 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<any> {
     const exist = await this.userModel.findOne({ email: registerDto.email })
-    if (exist) throw new HttpException('This email is already exists', HttpStatus.BAD_REQUEST)
+    if (exist) throw new HttpException('This email is already exists', HttpStatus.BAD_REQUEST);
     const createdUser = new this.userModel(registerDto);
     createdUser.password = this.hashPassword(createdUser.password);
     try {
@@ -35,6 +36,12 @@ export class AuthService {
     if (!user) throw new HttpException('Wrong email or password', HttpStatus.BAD_REQUEST) 
     return this.generateTokens({ userId: user.id })
   }
+
+  async refreshTokens(oldRefreshToken: string): Promise<any> {
+    const payload = jwt.verify(oldRefreshToken, process.env.JWT_SECRET);
+    return payload;
+  }
+
 
   hashPassword(pass) {
     const sha512 = (password, salt) => {
@@ -57,7 +64,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async addCookies(req: any, tokens: any) {
+  async addCookies(tokens: any) {
     return [
       {
           name: 'accessToken',
@@ -69,7 +76,7 @@ export class AuthService {
           },
       },
       {
-          name: 'refresToken',
+          name: 'refreshToken',
           value: tokens.refreshToken,
           options: {
               httpOnly: true,
