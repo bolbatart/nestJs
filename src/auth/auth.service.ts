@@ -5,7 +5,6 @@ import { LoginDto } from 'src/users/dto/login-user.dto';
 import { Model } from 'mongoose';
 import { IUser } from '../users/interfaces/users.interface';
 import { RegisterDto } from 'src/users/dto/register-user.dto';
-import { bcrypt } from 'bcrypt';
 import * as crypto from 'crypto';
 
 
@@ -20,8 +19,14 @@ export class AuthService {
     if (exist) throw new HttpException('This email is already exists', HttpStatus.BAD_REQUEST)
     const createdUser = new this.userModel(registerDto);
     createdUser.password = this.hashPassword(createdUser.password);
-    await createdUser.save();
-    return this.generateTokens({ userId: createdUser.id });
+    try {
+      const tokens = await this.generateTokens({ userId: createdUser.id });
+      await createdUser.save();
+      return tokens;
+    } catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async login(loginDto: LoginDto): Promise<any> {
@@ -42,13 +47,13 @@ export class AuthService {
       };
     }
 
-    const passwordData = sha512(pass, 'secret');
+    const passwordData = sha512(pass, process.env.PASSWORD_HASH_SECRET);
     return passwordData.passwordHash;
   }
 
   async generateTokens(payload: {}) {
-    const accessToken = sign(payload, 'secret', { expiresIn: '60s' })
-    const refreshToken = sign(payload, 'secret', { expiresIn: '1d' })
+    const accessToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.AT_EXPIRES })
+    const refreshToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.RT_EXPIRES })
     return { accessToken, refreshToken };
   }
 
@@ -60,7 +65,7 @@ export class AuthService {
           options: {
               httpOnly: true,
               secure: false,
-              maxAge: 600000, // 10m
+              maxAge: process.env.COOKIE_AT_MAXAGE, // 10m
           },
       },
       {
@@ -69,7 +74,7 @@ export class AuthService {
           options: {
               httpOnly: true,
               secure: false,
-              maxAge: 86400000, // 1d
+              maxAge: process.env.COOKIE_RT_MAXAGE, // 1d
           },
       }
 
