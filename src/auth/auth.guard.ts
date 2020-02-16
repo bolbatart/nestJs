@@ -13,13 +13,17 @@ export class AuthGuard implements CanActivate {
     }
 
     async validateRequest(req: any) {
-        // check for a cookies
         const cookies = req.cookies;
         if (!cookies) throw new HttpException('Unathorized', HttpStatus.UNAUTHORIZED); 
-        // validate tokens
-        const accessToken = cookies.accessToken;
-        const payloadAT = await jwt.verify(accessToken, 'secret'); 
-        req.user = payloadAT;
-        return true;
+        try {
+            const accessToken = cookies.accessToken;
+            const payloadAT = await jwt.verify(accessToken, 'secret'); 
+            req.user = payloadAT;
+            return true;
+        } catch (err) {
+            const message = 'Token error: ' + (err.message || err.name);
+            throw new HttpException(message, HttpStatus.UNAUTHORIZED);
+        }
+        
     }
 }

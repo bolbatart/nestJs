@@ -28,6 +28,7 @@
     "@nestjs/platform-express": "^6.10.14",
     "@nestjs/swagger": "^4.2.6",
     "@nestjsplus/cookies": "^1.0.2",
+    "bcrypt": "^3.0.8",
     "cookie-parser": "^1.4.4",
     "mongoose": "^5.8.11",
     "passport": "^0.4.1",

@@ -17,7 +17,7 @@ export class AuthController {
             @Body() registerDto: RegisterDto, 
             @Request() req
         ){
-        const tokens = await this.authService.register(registerDto, req);
+        const tokens = await this.authService.register(registerDto);
         req._cookies = await this.authService.addCookies(req, tokens);
         return { message: 'Registered' };
     }
@@ -28,7 +28,7 @@ export class AuthController {
             @Body() loginDto: LoginDto, 
             @Request() req
         ){
-        const tokens = await this.authService.login(loginDto, req)
+        const tokens = await this.authService.login(loginDto)
         req._cookies = await this.authService.addCookies(req, tokens);
         return { message: 'Logged in' };
     }
