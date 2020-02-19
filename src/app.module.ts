@@ -18,7 +18,7 @@ import { UsersController } from './users/users.controller';
     ConfigModule.forRoot({ isGlobal: true, }),
     ProjectsModule
   ],
-  controllers: [AppController, ProjectsController, UsersController],
+  controllers: [AppController, UsersController],
   providers: [AppService],
 })
 export class AppModule {}
