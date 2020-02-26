@@ -1,10 +1,10 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { sign } from 'jsonwebtoken';
-import { LoginDto } from 'src/users/dto/login-user.dto';
+import { LoginDto } from 'src/auth/dto/login-user.dto';
 import { Model } from 'mongoose';
-import { IUser } from '../users/interfaces/users.interface';
-import { RegisterDto } from 'src/users/dto/register-user.dto';
+import { IUser } from '../interfaces/users.interface';
+import { RegisterDto } from 'src/auth/dto/register-user.dto';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
@@ -14,7 +14,7 @@ import { Response } from 'express';
 export class AuthService {
   constructor(
     @InjectModel('User') private readonly userModel: Model<IUser>
-  ) {}
+  ) { }
 
   async register(registerDto: RegisterDto, res: Response): Promise<Response> {
     const exist = await this.userModel.findOne({ email: registerDto.email })

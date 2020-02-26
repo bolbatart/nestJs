@@ -1,9 +1,11 @@
 import * as mongoose from 'mongoose';
 
 export const UserSchema = new mongoose.Schema({
-  email: String,
+  email: { type: String, unique: true },
   password: String,
   firstName: String,
   lastName: String,
-  age: Number,
+  age: { type: Number, validate: {
+      validator: age => age > 0 && age < 100
+    } },
 });
