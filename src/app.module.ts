@@ -12,10 +12,10 @@ import { UsersController } from './users/users.controller';
 
 @Module({
   imports: [
-    UsersModule, 
     MongooseModule.forRoot('mongodb://localhost:27017/nest'), 
-    AuthModule,
     ConfigModule.forRoot({ isGlobal: true, }),
+    UsersModule, 
+    AuthModule,
     ProjectsModule
   ],
   controllers: [AppController, UsersController],

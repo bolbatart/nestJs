@@ -16,33 +16,45 @@ export class AuthService {
     @InjectModel('User') private readonly userModel: Model<IUser>
   ) { }
 
-  async register(registerDto: RegisterDto, res: Response): Promise<Response> {
+  async register(registerDto: RegisterDto, res: Response): Promise<RegisterDto> {
     const exist = await this.userModel.findOne({ email: registerDto.email })
     if (exist) throw new HttpException('This email is already exists', HttpStatus.BAD_REQUEST);
-    const createdUser = new this.userModel(registerDto);
-    createdUser.password = this.hashPassword(createdUser.password);
     try {
-      const resWithCookies = this.createJwtCookies({ userId: createdUser.id }, res);
+      const createdUser = new this.userModel(registerDto);
+      createdUser.password = this.hashPassword(createdUser.password);
+      await this.createJwtCookies({ userId: createdUser.id }, res);
       await createdUser.save();
-      return resWithCookies;
+      const { password, ...userToReturn } = createdUser.toObject();
+      return userToReturn;
     } catch (err) {
       const message = 'Server error: ' + (err.message || err.name);
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async login(loginDto: LoginDto, res: Response): Promise<Response> {
+  async login(loginDto: LoginDto, res: Response): Promise<LoginDto> {
     const hashedPassword = this.hashPassword(loginDto.password);
     const user = await this.userModel.findOne({ email: loginDto.email, password: hashedPassword })
     if (!user) throw new HttpException('Wrong email or password', HttpStatus.BAD_REQUEST) 
-    const resWithCookies = this.createJwtCookies({ userId: user.id }, res);
-    return resWithCookies;
+    try {
+      await this.createJwtCookies({ userId: user.id }, res);
+      const {password, ...userToReturn} = user.toObject();
+      return userToReturn;
+    } catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
-  refreshTokens(oldRefreshToken: string, res: Response): Response {
-    const decodedToken = jwt.verify(oldRefreshToken, process.env.JWT_SECRET)
-    const resWithCookies = this.createJwtCookies({ userId: (<any>decodedToken).userId }, res)
-    return resWithCookies;
+  async refreshTokens(oldRefreshToken: string, res: Response): Promise<boolean> {
+    try {
+      const decodedToken = jwt.verify(oldRefreshToken, process.env.JWT_SECRET)
+      await this.createJwtCookies({ userId: (<any>decodedToken).userId }, res)
+      return true;
+    } catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
 
@@ -56,29 +68,23 @@ export class AuthService {
           passwordHash:value
       };
     }
-
     const passwordData = sha512(pass, process.env.PASSWORD_HASH_SECRET);
     return passwordData.passwordHash;
   }
 
-  createJwtCookies(payload: {}, res: Response): Response {
-    try {
-      const accessToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.AT_EXPIRES })
-      const refreshToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.RT_EXPIRES })
-      res.cookie('accessToken', accessToken, {
-        maxAge: Number(process.env.COOKIE_AT_MAXAGE),
-        httpOnly: true,
-        secure: false,
-      });
-      res.cookie('refreshToken', refreshToken, {
-        maxAge: Number(process.env.COOKIE_RT_MAXAGE),
-        httpOnly: true,
-        secure: false,
-      });
-      return res;
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  createJwtCookies(payload: {}, res: Response) {
+    const accessToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.AT_EXPIRES })
+    const refreshToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.RT_EXPIRES })
+    res.cookie('accessToken', accessToken, {
+      maxAge: Number(process.env.COOKIE_AT_MAXAGE),
+      httpOnly: true,
+      secure: false,
+    });
+    res.cookie('refreshToken', refreshToken, {
+      maxAge: Number(process.env.COOKIE_RT_MAXAGE),
+      httpOnly: true,
+      secure: false,
+    });
   }
   
 }

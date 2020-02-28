@@ -9,6 +9,5 @@ import { ProjectsController } from './projects.controller';
   imports: [MongooseModule.forFeature([{ name: 'Project', schema: ProjectSchema}])],
   controllers: [ProjectsController],
   providers: [ProjectsService]
-  
 })
 export class ProjectsModule {}

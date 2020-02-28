@@ -1,7 +1,9 @@
-import { Controller,  Body, Get, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller,  Body, Get, Delete, UseGuards, HttpStatus, Req, Res } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { UsersService } from './users.service';
-import { DeleteUserDto } from '../auth/dto/delete-user.dto';
+import { DeleteUserDto } from './dto/delete-user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { UserDto } from './dto/search-user.dto';
 
 
 @Controller('users')
@@ -11,18 +13,14 @@ export class UsersController {
   ) { }
 
   @Get('profile')
-  @UseGuards(new AuthGuard)
-  getProfile(@Request() req) {
-    return this.usersService.getUser(req.user);
+  async getProfile(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() userId: UserDto
+    ): Promise<Response> {
+    const usersProfile = await this.usersService.getProfile(userId);
+    return res.status(HttpStatus.OK).send(usersProfile);
   }
   
-  @Get()
-  getAllUsers() {
-    return this.usersService.getAllUsers();
-  }
-
-  @Delete()
-  deleteUser(@Body() deleteUserDto: DeleteUserDto) {
-    return this.usersService.deleteUser(deleteUserDto);
-  }
+  
 }

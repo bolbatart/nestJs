@@ -16,12 +16,8 @@ export class AuthController {
     @Body() registerDto: RegisterDto,
     @Res() res: Response
   ): Promise<Response> {
-    try {
-      await this.authService.register(registerDto, res);
-      return res.status(200).send('registered...');
-    } catch (error) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
-    }
+    const user = await this.authService.register(registerDto, res);
+    return res.status(HttpStatus.OK).send(user);
   }
 
   @Post('login')
@@ -29,23 +25,15 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res() res: Response
   ): Promise<Response> {
-    try {
-      res = await this.authService.login(loginDto, res);
-      return res.status(HttpStatus.OK).send('logged in...');
-    } catch (error) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
-    }
+      const user = await this.authService.login(loginDto, res);
+      return res.status(HttpStatus.OK).send(user);
   }
 
   @Get('logout')
   logout(@Res() res: Response): Response {
-    try {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
       return res.status(HttpStatus.OK).send('Logged out');
-    } catch (error) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
-    }
   }
 
   @Post('refresh')
@@ -53,12 +41,8 @@ export class AuthController {
     @Req() req: Request,    
     @Res() res: Response
   ): Promise<Response> {
-    try {
       await this.authService.refreshTokens(req.cookies.refreshToken, res);
       return res.status(HttpStatus.OK).send('Tokens have been updated');
-    } catch (error) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
-    }
   }
 
 }

@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class filterProjectDto {
     @ApiProperty()
-    readonly availablePositions?: string;
+    availablePositions?: string[] | { $type: number};
 
     @ApiProperty()
-    readonly area?: string[];
+    area?: string[] | { $type: number};
 
     @ApiProperty()
-    readonly location?: string;
+    location?: string | { $type: number};
   }

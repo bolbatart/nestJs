@@ -21,12 +21,8 @@ export class ProjectsController {
         @Res() res: Response,
         @Body() parametrs: filterProjectDto
         ): Promise<Response> {
-        try {
-            const projects = await this.projectsService.getProjects(parametrs);
-            return res.status(HttpStatus.OK).send(projects);
-        } catch (error) {
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);    
-        }
+        const projects = await this.projectsService.getProjects(parametrs);
+        return res.status(HttpStatus.OK).send(projects);
     }
     
     @Get(':id')
@@ -34,20 +30,10 @@ export class ProjectsController {
         @Param('id') projectId: string,
         @Res() res: Response
         ): Promise<Response> {
-        try {
-            const project = await this.projectsService.getProjectById(projectId);
-            return res.status(HttpStatus.OK).send(project);
-        } catch (error) {
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);    
-        }
+        const project = await this.projectsService.getProjectById(projectId);
+        return res.status(HttpStatus.OK).send(project);
     }
     
-    // @Get()
-    // @UseGuards(new AuthGuard)
-    // async myProject(@Req() req: Request) {
-
-    // }
-
     @Post('create')
     @UseGuards(new AuthGuard)
     async createProject(
@@ -55,12 +41,8 @@ export class ProjectsController {
         @Req() req: Request,
         @Res() res: Response
         ): Promise<Response> {
-        try {
-            const project = await this.projectsService.createProject(projectDto, req);
-            return res.status(HttpStatus.OK).send(project);
-        } catch (error) {
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
-        }
+        const project = await this.projectsService.createProject(projectDto, req);
+        return res.status(HttpStatus.OK).send(project);
     }
 
     @Delete('delete')
@@ -70,12 +52,8 @@ export class ProjectsController {
         @Res() res: Response,
         @Body() deleteProjectDto: DeleteProjectDto
         ): Promise<Response> {
-            try {
-                await this.projectsService.deleteProject(deleteProjectDto); 
-                return res.status(HttpStatus.OK).send('deleted...');
-            } catch (error) {
-                return res.status(HttpStatus.BAD_REQUEST).send(error);
-            }
+        await this.projectsService.deleteProject(deleteProjectDto); 
+        return res.status(HttpStatus.OK).send('deleted...');
     }
 
     @Put('edit')
@@ -85,12 +63,8 @@ export class ProjectsController {
         @Res() res: Response,
         @Body() editProjectDto: EditProjectDto
         ) {
-        try {
-            const editedProject = await this.projectsService.editProject(editProjectDto); 
-            return res.status(HttpStatus.OK).send(editedProject);
-        } catch (error) {
-            return res.status(HttpStatus.BAD_REQUEST).send(error);
-        }
+        const project = await this.projectsService.editProject(editProjectDto); 
+        return res.status(HttpStatus.OK).send(project);
     }
 
 }
