@@ -6,6 +6,7 @@ import { ProjectDto } from 'src/projects/dto/create-project.dto';
 import { DeleteProjectDto } from './dto/delete-project.dto';
 import { EditProjectDto } from './dto/edit-project.dto';
 import { filterProjectDto } from './dto/filter-project.dto';
+import * as jwt from 'jsonwebtoken';
 
 
 
@@ -63,7 +64,7 @@ export class ProjectsController {
         @Res() res: Response,
         @Body() editProjectDto: EditProjectDto
         ) {
-        const project = await this.projectsService.editProject(editProjectDto); 
+        const project = await this.projectsService.editProject(editProjectDto, req); 
         return res.status(HttpStatus.OK).send(project);
     }
 

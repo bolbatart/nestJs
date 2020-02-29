@@ -62,7 +62,8 @@ export class ProjectsService {
       projectDto.userId = await (<any>jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET)).userId;
       const createdProject = new this.projectModel(projectDto);
       await createdProject.save();
-      return createdProject;
+      const { userId, description, ...projectToReturn } = createdProject.toObject();
+      return projectToReturn;
     } catch (err) {
       const message = 'Server error: ' + (err.message || err.name);
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -79,9 +80,10 @@ export class ProjectsService {
    }
   }
 
-  async editProject(editProjectDto: EditProjectDto): Promise<IProject> {
+  async editProject(editProjectDto: EditProjectDto, req: Request): Promise<IProject> {
     try {
-      const project: IProject = await this.projectModel.findOneAndUpdate({ _id: editProjectDto.projectId}, editProjectDto, { new: true });
+      const userId: string = <string>jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET)
+      const project: IProject = await this.projectModel.findOneAndUpdate({ _id: editProjectDto.projectId, userId}, editProjectDto, { new: true });
       return project;
     } catch (err) {
       const message = 'Server error: ' + (err.message || err.name);

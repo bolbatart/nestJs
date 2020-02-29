@@ -19,6 +19,5 @@ export class ProjectDto {
     @ApiProperty()
     readonly description?: string;
 
-    @ApiProperty()
     userId?: string;
   }
