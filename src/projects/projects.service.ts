@@ -2,7 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IProject } from 'src/interfaces/projects.interface';
-import { Response, Request } from 'express'; 
+import { Request } from 'express'; 
 import { ProjectDto } from 'src/projects/dto/create-project.dto';
 import * as jwt from 'jsonwebtoken';
 import { DeleteProjectDto } from './dto/delete-project.dto';
@@ -16,26 +16,20 @@ export class ProjectsService {
     @InjectModel('Project') private readonly projectModel: Model<IProject>
   ) { }
 
-  // stuff(a = "any") {
+  testSum(a: number, b: number): number {
+    return a + b;
+  }
 
-  // }
 
-  async getProjects(parameters: filterProjectDto) {
+  async getProjects(parameters: filterProjectDto): Promise<IProject> {
     try {
-      // Object.keys(parameters).forEach( key => {
-      //   if (parameters[key] === 'any') {
-      //     parameters[key] = { $type: 2 };
-      //   } else if (key != 'location') {
-      //     parameters[key] = { $in: parameters[key] };
-      //   }
-      // });
       if (parameters.location === undefined || parameters.location === "any")
         parameters.location = { $type: 2};
       if (parameters.area === undefined || parameters.area[0] === "any")
         parameters.area = { $type: 2};
       if (parameters.availablePositions === undefined || parameters.availablePositions[0] === "any")
         parameters.availablePositions = { $type: 2};
-      const projects = await this.projectModel.find({ 
+      const projects: IProject = await this.projectModel.find({ 
         location: parameters.location,
         professionalsNeeded: parameters.availablePositions,
         area: parameters.area
@@ -49,7 +43,7 @@ export class ProjectsService {
 
   async getProjectById(projectId: string): Promise<IProject> {
     try {
-      let project: IProject = await this.projectModel.findOne({ _id: projectId});
+      const project: IProject = await this.projectModel.findOne({ _id: projectId});
       return project;
     } catch (err) {
       const message = 'Server error: ' + (err.message || err.name);
@@ -59,7 +53,7 @@ export class ProjectsService {
 
   async createProject(projectDto: ProjectDto, req: Request): Promise<IProject> {
     try {
-      projectDto.userId = await (<any>jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET)).userId;
+      projectDto.userId = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId; //       projectDto.userId = await (<{userId: string}>jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET)).userId;
       const createdProject = new this.projectModel(projectDto);
       await createdProject.save();
       const { userId, description, ...projectToReturn } = createdProject.toObject();
@@ -82,13 +76,25 @@ export class ProjectsService {
 
   async editProject(editProjectDto: EditProjectDto, req: Request): Promise<IProject> {
     try {
-      const userId: string = <string>jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET)
-      const project: IProject = await this.projectModel.findOneAndUpdate({ _id: editProjectDto.projectId, userId}, editProjectDto, { new: true });
-      return project;
+      const usrId: string = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId; //       const usrId: string = (<{userId: string}>jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET)).userId;
+      const edited = await this.projectModel.findOneAndUpdate({ _id: editProjectDto.projectId, userId: usrId}, editProjectDto, { new: true });
+      const { userId, description, ...projectToReturn } = edited.toObject();
+      return projectToReturn;
     } catch (err) {
       const message = 'Server error: ' + (err.message || err.name);
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
+  async filters(): Promise<{ locations: [string], areas: [string], professionalsNeeded: [string] }> {
+    try {
+      const locations = await this.projectModel.distinct('location');
+      const areas = await this.projectModel.distinct('area');
+      const professionalsNeeded = await this.projectModel.distinct('professionalsNeeded');
+      return { locations, areas, professionalsNeeded };        
+    } catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

@@ -1,18 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsService } from './projects.service';
 
-describe('ProjectsService', () => {
-  let service: ProjectsService;
+describe('Some tests', () => {
+	let module: TestingModule;
+	let service: ProjectsService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [ProjectsService],
+  beforeAll(async () => {
+		module = await Test.createTestingModule({
+      providers: [ ProjectsService ]
     }).compile();
+	});
+	
+	beforeEach(() => {
+		service = module.get(ProjectsService);
+	});
+	
+	afterEach(() => {
+		jest.resetAllMocks();
+	});
+	
+	it('should be defined', () => {
+		expect(service).toBeDefined();
+	});
 
-    service = module.get<ProjectsService>(ProjectsService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
 });

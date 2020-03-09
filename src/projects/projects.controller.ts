@@ -6,7 +6,6 @@ import { ProjectDto } from 'src/projects/dto/create-project.dto';
 import { DeleteProjectDto } from './dto/delete-project.dto';
 import { EditProjectDto } from './dto/edit-project.dto';
 import { filterProjectDto } from './dto/filter-project.dto';
-import * as jwt from 'jsonwebtoken';
 
 
 
@@ -14,36 +13,40 @@ import * as jwt from 'jsonwebtoken';
 export class ProjectsController {
     constructor(
         private readonly projectsService: ProjectsService,
-    ){}
-
+        ){}
+        
     @Get()
     async projects(
         @Req() req: Request,
         @Res() res: Response,
         @Body() parametrs: filterProjectDto
         ): Promise<Response> {
-        const projects = await this.projectsService.getProjects(parametrs);
-        return res.status(HttpStatus.OK).send(projects);
+        return res.send(await this.projectsService.getProjects(parametrs));
     }
-    
+        
+    @Get('filters')
+    async filters(
+        @Res() res: Response
+        ): Promise<Response> {
+        return res.send(await this.projectsService.filters());
+    }
+
     @Get(':id')
     async projectById(
         @Param('id') projectId: string,
-        @Res() res: Response
-        ): Promise<Response> {
-        const project = await this.projectsService.getProjectById(projectId);
-        return res.status(HttpStatus.OK).send(project);
-    }
+    @Res() res: Response
+    ): Promise<Response> {
+    return res.send(await this.projectsService.getProjectById(projectId));
+}
     
     @Post('create')
     @UseGuards(new AuthGuard)
     async createProject(
-        @Body() projectDto: ProjectDto,
         @Req() req: Request,
-        @Res() res: Response
+        @Res() res: Response,
+        @Body() projectDto: ProjectDto
         ): Promise<Response> {
-        const project = await this.projectsService.createProject(projectDto, req);
-        return res.status(HttpStatus.OK).send(project);
+        return res.send(await this.projectsService.createProject(projectDto, req));
     }
 
     @Delete('delete')
@@ -54,7 +57,7 @@ export class ProjectsController {
         @Body() deleteProjectDto: DeleteProjectDto
         ): Promise<Response> {
         await this.projectsService.deleteProject(deleteProjectDto); 
-        return res.status(HttpStatus.OK).send('deleted...');
+        return res.send('deleted...');
     }
 
     @Put('edit')
@@ -63,9 +66,9 @@ export class ProjectsController {
         @Req() req: Request,
         @Res() res: Response,
         @Body() editProjectDto: EditProjectDto
-        ) {
-        const project = await this.projectsService.editProject(editProjectDto, req); 
-        return res.status(HttpStatus.OK).send(project);
+        ): Promise<Response> {
+        return res.send(await this.projectsService.editProject(editProjectDto, req));
     }
+
 
 }

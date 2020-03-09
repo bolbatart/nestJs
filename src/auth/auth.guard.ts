@@ -12,7 +12,7 @@ export class AuthGuard implements CanActivate {
         return this.validateRequest(request);
     }
 
-    async validateRequest(req: any) {
+    async validateRequest(req: any): Promise<boolean> {
         const cookies = req.cookies;
         if (!cookies) throw new HttpException('Unathorized', HttpStatus.UNAUTHORIZED); 
         try {

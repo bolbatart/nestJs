@@ -46,23 +46,33 @@ export class AuthService {
     }
   }
 
-  async refreshTokens(oldRefreshToken: string, res: Response): Promise<boolean> {
+  async refreshTokens(oldRefreshToken: string, res: Response): Promise<{ message: string}> {
     try {
       const decodedToken = jwt.verify(oldRefreshToken, process.env.JWT_SECRET)
-      await this.createJwtCookies({ userId: (<any>decodedToken).userId }, res)
-      return true;
+      await this.createJwtCookies({ userId: (decodedToken as any).userId }, res)
+      return { message: 'Tokens have been updated'};
     } catch (err) {
       const message = 'Server error: ' + (err.message || err.name);
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
+  logout(res: Response): { message: string} {
+    try {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      return { message: 'Logged out'};
+    } catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
-  hashPassword(pass): string {
-    const sha512 = (password, salt) => {
-      let hash = crypto.createHmac('sha512', salt); /** Hashing algorithm sha512 */
+  hashPassword(pass: string) {
+    const sha512 = (password: string, salt: string) => {
+      const hash = crypto.createHmac('sha512', salt); /** Hashing algorithm sha512 */
       hash.update(password);
-      let value = hash.digest('hex');
+      const value = hash.digest('hex');
       return {
           salt:salt,
           passwordHash:value
@@ -72,7 +82,7 @@ export class AuthService {
     return passwordData.passwordHash;
   }
 
-  createJwtCookies(payload: {}, res: Response) {
+  createJwtCookies(payload: {}, res: Response): void {
     const accessToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.AT_EXPIRES })
     const refreshToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.RT_EXPIRES })
     res.cookie('accessToken', accessToken, {

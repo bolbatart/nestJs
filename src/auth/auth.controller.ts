@@ -16,8 +16,7 @@ export class AuthController {
     @Body() registerDto: RegisterDto,
     @Res() res: Response
   ): Promise<Response> {
-    const user = await this.authService.register(registerDto, res);
-    return res.status(HttpStatus.OK).send(user);
+    return res.status(HttpStatus.OK).send(await this.authService.register(registerDto, res));
   }
 
   @Post('login')
@@ -25,15 +24,12 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res() res: Response
   ): Promise<Response> {
-      const user = await this.authService.login(loginDto, res);
-      return res.status(HttpStatus.OK).send(user);
+      return res.send(await this.authService.login(loginDto, res));
   }
 
   @Get('logout')
   logout(@Res() res: Response): Response {
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
-      return res.status(HttpStatus.OK).send('Logged out');
+      return res.send(this.authService.logout(res));
   }
 
   @Post('refresh')
@@ -41,8 +37,7 @@ export class AuthController {
     @Req() req: Request,    
     @Res() res: Response
   ): Promise<Response> {
-      await this.authService.refreshTokens(req.cookies.refreshToken, res);
-      return res.status(HttpStatus.OK).send('Tokens have been updated');
+      return res.send(await this.authService.refreshTokens(req.cookies.refreshToken, res));
   }
 
 }

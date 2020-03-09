@@ -2,9 +2,7 @@ import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestj
 import { IUser } from '../interfaces/users.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { DeleteUserDto } from './dto/delete-user.dto';
 import { IProject } from 'src/interfaces/projects.interface';
-
 
 
 @Injectable()
