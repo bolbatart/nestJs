@@ -10,16 +10,17 @@ import { EditProjectDto } from './dto/edit-project.dto';
 import { filterProjectDto } from './dto/filter-project.dto';
 
 
+
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectModel('Project') private readonly projectModel: Model<IProject>
   ) { }
 
-  testSum(a: number, b: number): number {
-    return a + b;
+  async test() {
+    const result = this.projectModel.find();
+    return result;
   }
-
 
   async getProjects(parameters: filterProjectDto): Promise<IProject> {
     try {
@@ -41,6 +42,7 @@ export class ProjectsService {
     }
   }
 
+
   async getProjectById(projectId: string): Promise<IProject> {
     try {
       const project: IProject = await this.projectModel.findOne({ _id: projectId});
@@ -51,9 +53,10 @@ export class ProjectsService {
     }
   }
 
+
   async createProject(projectDto: ProjectDto, req: Request): Promise<IProject> {
     try {
-      projectDto.userId = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId; //       projectDto.userId = await (<{userId: string}>jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET)).userId;
+      projectDto.userId = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId;
       const createdProject = new this.projectModel(projectDto);
       await createdProject.save();
       const { userId, description, ...projectToReturn } = createdProject.toObject();
@@ -63,6 +66,7 @@ export class ProjectsService {
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
 
   async deleteProject(deleteProjectDto: DeleteProjectDto): Promise<boolean> {
    try {
@@ -74,9 +78,10 @@ export class ProjectsService {
    }
   }
 
+
   async editProject(editProjectDto: EditProjectDto, req: Request): Promise<IProject> {
     try {
-      const usrId: string = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId; //       const usrId: string = (<{userId: string}>jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET)).userId;
+      const usrId: string = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId;
       const edited = await this.projectModel.findOneAndUpdate({ _id: editProjectDto.projectId, userId: usrId}, editProjectDto, { new: true });
       const { userId, description, ...projectToReturn } = edited.toObject();
       return projectToReturn;
@@ -85,6 +90,7 @@ export class ProjectsService {
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
 
   async filters(): Promise<{ locations: [string], areas: [string], professionalsNeeded: [string] }> {
     try {

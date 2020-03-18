@@ -45,6 +45,7 @@ export class ProjectsController {
         @Req() req: Request,
         @Res() res: Response,
         @Body() projectDto: ProjectDto
+        // param userids
         ): Promise<Response> {
         return res.send(await this.projectsService.createProject(projectDto, req));
     }
