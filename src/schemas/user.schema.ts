@@ -24,5 +24,14 @@ export const UserSchema = new mongoose.Schema({
   bio: {
     type: String,
     maxlength: 255
+  },
+  resetPasswordKey: {
+    type: String,
+    maxlength: 255
+  },
+  keyExpires: {
+    type: String,
+    maxlength: 255
   }
+
 });

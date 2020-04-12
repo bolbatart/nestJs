@@ -15,6 +15,14 @@ export class ProjectsController {
         private readonly projectsService: ProjectsService,
         ){}
         
+    @Get('filter-parameters')
+    async getFilteringParameters(
+        @Req() req: Request,
+        @Res() res: Response
+        ): Promise<Response> {
+        return res.send(await this.projectsService.getFilteringParameters());
+    }
+
     @Get()
     async projects(
         @Req() req: Request,
@@ -34,7 +42,7 @@ export class ProjectsController {
     @Get(':id')
     async projectById(
         @Param('id') projectId: string,
-    @Res() res: Response
+        @Res() res: Response
     ): Promise<Response> {
     return res.send(await this.projectsService.getProjectById(projectId));
 }

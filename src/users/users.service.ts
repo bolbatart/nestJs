@@ -12,11 +12,12 @@ export class UsersService {
         @InjectModel('Project') private readonly projectModel: Model<IProject>
     ) {}
 
-    async getProfile(usr: {userId: string}): Promise<{user: IUser, projects: IProject}> {
+    async getProfile(userId: string): Promise<{user: IUser, projects: IProject}> {
         try {
-            const { password, ...user }: IUser = await this.userModel.find({ _id: usr.userId});
-            const projects: IProject = await this.projectModel.find({ userId: usr.userId }); 
-            return { user, projects }
+            const user = await this.userModel.findOne({ _id: userId});
+            const projects: IProject = await this.projectModel.find({ userId: userId }); 
+            const {password, keyExpires, resetPasswordKey, ...userToReturn}: IUser = user.toObject()
+            return {user: userToReturn, projects};
         } catch (err) {
             const message = 'Server error: ' + (err.message || err.name);
             throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);

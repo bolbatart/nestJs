@@ -5,5 +5,7 @@ export interface IUser extends Document {
   password?: string,
   firstName: string,
   lastName: string,
-  age: number
+  age: number,
+  resetPasswordKey?: string,
+  keyExpires?: string
 }

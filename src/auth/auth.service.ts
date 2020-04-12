@@ -1,5 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel, getModelToken } from '@nestjs/mongoose';
 import { sign } from 'jsonwebtoken';
 import { LoginDto } from 'src/auth/dto/login-user.dto';
 import { Model } from 'mongoose';
@@ -7,7 +7,11 @@ import { IUser } from '../interfaces/users.interface';
 import { RegisterDto } from 'src/auth/dto/register-user.dto';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { v4 as uuidv4 } from 'uuid';
+import * as nodemailer from 'nodemailer';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 
 @Injectable()
@@ -15,7 +19,7 @@ export class AuthService {
   constructor(
     @InjectModel('User') private readonly userModel: Model<IUser>
   ) { }
-
+  
   async register(registerDto: RegisterDto, res: Response): Promise<RegisterDto> {
     const exist = await this.userModel.findOne({ email: registerDto.email })
     if (exist) throw new HttpException('This email is already exists', HttpStatus.BAD_REQUEST);
@@ -55,6 +59,62 @@ export class AuthService {
       const message = 'Server error: ' + (err.message || err.name);
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<{ message: string }> {
+    const user = await this.userModel.findOne({ email: forgotPasswordDto.email })
+    if (!user) throw new HttpException('Wrong email', HttpStatus.BAD_REQUEST) 
+    try {
+      const resetPasswordKey = uuidv4();
+      user.resetPasswordKey = resetPasswordKey;
+      user.keyExpires = Date.now() + 3600000;
+      user.save()
+      this.sendLinkToEmail(resetPasswordKey, forgotPasswordDto.email)
+      return { message: 'Success...' }
+    }
+    catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto, key): Promise<{ message: string }> {
+    try {
+      console.log(key)
+      const user = await this.userModel.findOne({ resetPasswordKey: key })
+      if (!user || user.keyExpires < Date.now()) {
+        throw new HttpException('Please send your email address to us again', HttpStatus.INTERNAL_SERVER_ERROR);  
+      }
+      user.password = this.hashPassword(resetPasswordDto.password);
+      user.save()
+      return { message: 'Success...' }
+    }
+    catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  sendLinkToEmail(key: string, email: string) {
+    let transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: 'artiombolbat123@gmail.com',
+        pass: process.env.GMAILPW
+      }
+    });
+    let mailOptions = {
+      to: 'artiombolbat123@gmail.com',
+      from: 'artiombolbat123@gmail.com',
+      subject: 'Password reset',
+      text: 'http://localhost:4200/reset/' + key
+    };
+    transporter.sendMail(mailOptions, function (err, info) {
+      if(err)
+        console.log(err)
+      else
+        console.log(info);
+   });
   }
 
   logout(res: Response): { message: string} {

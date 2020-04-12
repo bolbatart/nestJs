@@ -14,28 +14,54 @@ import { filterProjectDto } from './dto/filter-project.dto';
 @Injectable()
 export class ProjectsService {
   constructor(
-    @InjectModel('Project') private readonly projectModel: Model<IProject>
-  ) { }
+    @InjectModel('Project') private readonly projectModel: Model<IProject>,
+    ) { }
 
-  async test() {
-    const result = this.projectModel.find();
-    return result;
+
+  async getFilteringParameters(): 
+    Promise<{
+      areas: string[], 
+      availablePositions: string[], 
+      locations: string[]
+    }>  {
+    let parameters = {
+      areas: [], 
+      availablePositions: [], 
+      locations: []
+    };
+    await this.projectModel.find().distinct('professionalsNeeded', (err, profs) => {
+      profs.forEach(prof => parameters.availablePositions.push(prof))
+    })
+    await this.projectModel.find().distinct('area', (err, areas) => {
+      areas.forEach(area => parameters.areas.push(area))
+    })
+    await this.projectModel.find().distinct('location', (err, locations) => {
+      locations.forEach(location => parameters.locations.push(location))
+    })
+    return parameters;
   }
 
   async getProjects(parameters: filterProjectDto): Promise<IProject> {
     try {
-      if (parameters.location === undefined || parameters.location === "any")
+      if (parameters.location === undefined || parameters.location === "any") 
         parameters.location = { $type: 2};
+      
       if (parameters.area === undefined || parameters.area[0] === "any")
         parameters.area = { $type: 2};
+      else parameters.area = { $in: parameters.area }
+      
       if (parameters.availablePositions === undefined || parameters.availablePositions[0] === "any")
         parameters.availablePositions = { $type: 2};
+      else parameters.availablePositions = { $in: parameters.availablePositions }
+      
       const projects: IProject = await this.projectModel.find({ 
         location: parameters.location,
         professionalsNeeded: parameters.availablePositions,
-        area: parameters.area
+        area: parameters.area,
       });
+      
       return projects;        
+    
     } catch (err) {
       const message = 'Server error: ' + (err.message || err.name);
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);

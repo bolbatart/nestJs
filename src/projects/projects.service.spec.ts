@@ -19,25 +19,12 @@ describe('projects.service.ts test: ', () => {
     distinct: jest.fn(x => Promise.resolve(x))
   }
   
-// kaip turetu buti
-  // beforeAll(async () => {
-  //   module = await Test.createTestingModule({
-  //     imports: [],
-  //     providers: [
-  //       ProjectsService,
-  //       { provide: getModelToken('Project'), useValue: mockProjectModel }
-  //     ]
-  //   }).compile();
-  // });
-
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        MongooseModule.forRoot('mongodb://localhost:27017/nest'),
-        MongooseModule.forFeature([{ name: 'Project', schema: ProjectSchema }])
-      ],
+      imports: [],
       providers: [
-        ProjectsService
+        ProjectsService,
+        { provide: getModelToken('Project'), useValue: mockProjectModel }
       ]
     }).compile();
   });

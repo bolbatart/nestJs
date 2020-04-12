@@ -12,13 +12,16 @@ import { UsersController } from './users/users.controller';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/nest'), 
+    MongooseModule.forRoot('mongodb://localhost:27017/nest'),
     ConfigModule.forRoot({ isGlobal: true, }),
     UsersModule, 
     AuthModule,
     ProjectsModule
   ],
-  controllers: [AppController, UsersController],
+  controllers: [
+    AppController, 
+    UsersController
+  ],
   providers: [AppService],
 })
 export class AppModule {}
