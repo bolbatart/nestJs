@@ -26,10 +26,21 @@ export class ProjectsController {
     @Get()
     async projects(
         @Req() req: Request,
-        @Res() res: Response,
-        @Body() parametrs: filterProjectDto
+        @Res() res: Response
         ): Promise<Response> {
-        return res.send(await this.projectsService.getProjects(parametrs));
+        return res.send(await this.projectsService.getProjects({}));
+    }
+
+    @Get(':area/:availablePosition/:location/:name')
+    async filteredProjects(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Param('area') area: string,
+        @Param('availablePosition') availablePosition: string,
+        @Param('location') location: string,
+        @Param('name') name: string,
+        ): Promise<Response> {
+        return res.send(await this.projectsService.getProjects({area, availablePosition, location, name}));
     }
         
     @Get('filters')
@@ -58,14 +69,15 @@ export class ProjectsController {
         return res.send(await this.projectsService.createProject(projectDto, req));
     }
 
-    @Delete('delete')
+    @Delete('delete/:id')
     @UseGuards(new AuthGuard)
     async deleteProject(
         @Req() req: Request, 
         @Res() res: Response,
-        @Body() deleteProjectDto: DeleteProjectDto
+        @Param('id') projectId: string
+        // @Body() deleteProjectDto: DeleteProjectDto
         ): Promise<Response> {
-        await this.projectsService.deleteProject(deleteProjectDto); 
+        await this.projectsService.deleteProject(projectId); 
         return res.send('deleted...');
     }
 

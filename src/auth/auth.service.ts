@@ -147,12 +147,12 @@ export class AuthService {
     const refreshToken = sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.RT_EXPIRES })
     res.cookie('accessToken', accessToken, {
       maxAge: Number(process.env.COOKIE_AT_MAXAGE),
-      httpOnly: true,
+      // httpOnly: true,
       secure: false,
     });
     res.cookie('refreshToken', refreshToken, {
       maxAge: Number(process.env.COOKIE_RT_MAXAGE),
-      httpOnly: true,
+      // httpOnly: true,
       secure: false,
     });
   }

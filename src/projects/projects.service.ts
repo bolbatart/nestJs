@@ -41,23 +41,31 @@ export class ProjectsService {
     return parameters;
   }
 
-  async getProjects(parameters: filterProjectDto): Promise<IProject> {
+  async findByKeyword(name) {
+    const results = await this.projectModel.find({ name: { $regex: name} })
+    return results;
+  }
+
+  async getProjects(parameters): Promise<IProject> {
     try {
       if (parameters.location === undefined || parameters.location === "any") 
         parameters.location = { $type: 2};
       
-      if (parameters.area === undefined || parameters.area[0] === "any")
+      if (parameters.area === undefined || parameters.area === "any")
         parameters.area = { $type: 2};
-      else parameters.area = { $in: parameters.area }
       
-      if (parameters.availablePositions === undefined || parameters.availablePositions[0] === "any")
-        parameters.availablePositions = { $type: 2};
-      else parameters.availablePositions = { $in: parameters.availablePositions }
-      
+      if (parameters.availablePosition === undefined || parameters.availablePosition === "any")
+        parameters.availablePosition = { $type: 2};
+
+      if (parameters.name === undefined || parameters.name === "any")
+        parameters.name = { $type: 2};
+      else parameters.name = { $regex: parameters.name }
+
       const projects: IProject = await this.projectModel.find({ 
         location: parameters.location,
-        professionalsNeeded: parameters.availablePositions,
+        professionalsNeeded: parameters.availablePosition,
         area: parameters.area,
+        name: parameters.name
       });
       
       return projects;        
@@ -67,6 +75,32 @@ export class ProjectsService {
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  // async getProjects(parameters: filterProjectDto): Promise<IProject> {
+  //   try {
+  //     if (parameters.location === undefined || parameters.location === "any") 
+  //       parameters.location = { $type: 2};
+      
+  //     if (parameters.area === undefined || parameters.area[0] === "any")
+  //       parameters.area = { $type: 2};
+  //     else parameters.area = { $in: parameters.area }
+      
+  //     if (parameters.availablePositions === undefined || parameters.availablePositions[0] === "any")
+  //       parameters.availablePositions = { $type: 2};
+  //     else parameters.availablePositions = { $in: parameters.availablePositions }
+      
+  //     const projects: IProject = await this.projectModel.find({ 
+  //       location: parameters.location,
+  //       professionalsNeeded: parameters.availablePositions,
+  //       area: parameters.area,
+  //     });
+      
+  //     return projects;        
+    
+  //   } catch (err) {
+  //     const message = 'Server error: ' + (err.message || err.name);
+  //     throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+  //   }
+  // }
 
 
   async getProjectById(projectId: string): Promise<IProject> {
@@ -94,9 +128,9 @@ export class ProjectsService {
   }
 
 
-  async deleteProject(deleteProjectDto: DeleteProjectDto): Promise<boolean> {
+  async deleteProject(projectId: string): Promise<boolean> {
    try {
-     await this.projectModel.findOneAndRemove({ _id: deleteProjectDto.projectId });
+     await this.projectModel.findOne({ _id: projectId });
      return true;
    } catch (err) {
     const message = 'Server error: ' + (err.message || err.name);
