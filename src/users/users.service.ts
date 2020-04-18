@@ -24,7 +24,7 @@ export class UsersService {
             throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
           }
     }
-
+    
     async editProfile(editUser: EditUserDto): Promise<{user: IUser}> {
         try {
             const user = await this.userModel.findOne({ _id: editUser.userId});
@@ -42,5 +42,5 @@ export class UsersService {
             throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
           }
     }
-    
+
 }

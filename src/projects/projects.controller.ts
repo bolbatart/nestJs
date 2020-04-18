@@ -6,6 +6,8 @@ import { ProjectDto } from 'src/projects/dto/create-project.dto';
 import { DeleteProjectDto } from './dto/delete-project.dto';
 import { EditProjectDto } from './dto/edit-project.dto';
 import { filterProjectDto } from './dto/filter-project.dto';
+import { CommentProjectDto } from './dto/comment-project.dto';
+import * as jwt from 'jsonwebtoken';
 
 
 
@@ -42,7 +44,7 @@ export class ProjectsController {
         ): Promise<Response> {
         return res.send(await this.projectsService.getProjects({area, availablePosition, location, name}));
     }
-        
+
     @Get('filters')
     async filters(
         @Res() res: Response
@@ -89,6 +91,40 @@ export class ProjectsController {
         @Body() editProjectDto: EditProjectDto
         ): Promise<Response> {
         return res.send(await this.projectsService.editProject(editProjectDto, req));
+    }
+
+    @Post(':id/comment')
+    @UseGuards(new AuthGuard)
+    async commentProject(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Param('id') projectId: string,
+        @Body() commentProjectDto: CommentProjectDto 
+        ): Promise<Response> {
+        const usrId: string = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId;
+        return res.send(await this.projectsService.commentProject(projectId, usrId, commentProjectDto.comment));
+    }
+
+    @Put(':id/like')
+    @UseGuards(new AuthGuard)
+    async likeProject(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Param('id') projectId: string
+    ){
+        const userId: string = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId;
+        return res.send(await this.projectsService.likeProject(projectId, userId));
+    }
+
+    @Put(':id/dislike')
+    @UseGuards(new AuthGuard)
+    async dislikeProject(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Param('id') projectId: string
+    ){
+        const userId: string = (jwt.verify(req.cookies.accessToken, process.env.JWT_SECRET) as {userId: string}).userId;
+        return res.send(await this.projectsService.dislikeProject(projectId, userId));
     }
 
 

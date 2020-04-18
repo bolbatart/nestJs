@@ -41,10 +41,6 @@ export class ProjectsService {
     return parameters;
   }
 
-  async findByKeyword(name) {
-    const results = await this.projectModel.find({ name: { $regex: name} })
-    return results;
-  }
 
   async getProjects(parameters): Promise<IProject> {
     try {
@@ -75,33 +71,7 @@ export class ProjectsService {
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  // async getProjects(parameters: filterProjectDto): Promise<IProject> {
-  //   try {
-  //     if (parameters.location === undefined || parameters.location === "any") 
-  //       parameters.location = { $type: 2};
-      
-  //     if (parameters.area === undefined || parameters.area[0] === "any")
-  //       parameters.area = { $type: 2};
-  //     else parameters.area = { $in: parameters.area }
-      
-  //     if (parameters.availablePositions === undefined || parameters.availablePositions[0] === "any")
-  //       parameters.availablePositions = { $type: 2};
-  //     else parameters.availablePositions = { $in: parameters.availablePositions }
-      
-  //     const projects: IProject = await this.projectModel.find({ 
-  //       location: parameters.location,
-  //       professionalsNeeded: parameters.availablePositions,
-  //       area: parameters.area,
-  //     });
-      
-  //     return projects;        
-    
-  //   } catch (err) {
-  //     const message = 'Server error: ' + (err.message || err.name);
-  //     throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
-  //   }
-  // }
-
+  
 
   async getProjectById(projectId: string): Promise<IProject> {
     try {
@@ -129,14 +99,14 @@ export class ProjectsService {
 
 
   async deleteProject(projectId: string): Promise<boolean> {
-   try {
-     await this.projectModel.findOne({ _id: projectId });
-     return true;
-   } catch (err) {
-    const message = 'Server error: ' + (err.message || err.name);
-    throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    try {
+      await this.projectModel.findOneAndDelete({ _id: projectId });
+      return true;
+    } catch (err) {
+     const message = 'Server error: ' + (err.message || err.name);
+     throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
    }
-  }
 
 
   async editProject(editProjectDto: EditProjectDto, req: Request): Promise<IProject> {
@@ -151,7 +121,6 @@ export class ProjectsService {
     }
   }
 
-
   async filters(): Promise<{ locations: [string], areas: [string], professionalsNeeded: [string] }> {
     try {
       const locations = await this.projectModel.distinct('location');
@@ -163,4 +132,56 @@ export class ProjectsService {
       throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async commentProject(projectId: string, userId: string, comment: string): Promise<IProject> {
+    try {
+      const project = await this.projectModel.findOne({_id: projectId});
+      if(!project.comments){
+        project.comments = [{userId, comment}]
+      } else project.comments.push({userId, comment})
+      await project.save();
+      return project;
+    } catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async likeProject(projectId: string, userId: string) {
+      try {
+        const project = await this.projectModel.findOne({ _id: projectId });
+        if (project.like.includes(userId)) 
+          project.like.splice(project.like.indexOf(userId), 1)
+        else {
+          project.like ? project.like.push(userId) : project.like = [userId];
+          if (project.dislike.includes(userId))
+            project.dislike.splice(project.dislike.indexOf(userId), 1)
+        }
+        await project.save();
+        return project;
+      } catch (err) {
+        const message = 'Server error: ' + (err.message || err.name);
+        throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+  }
+
+  async dislikeProject(projectId: string, userId: string) {
+    try {
+      const project = await this.projectModel.findOne({ _id: projectId });
+      if (project.dislike.includes(userId)) 
+        project.dislike.splice(project.dislike.indexOf(userId), 1)
+      else {
+        project.dislike ? project.dislike.push(userId) : project.dislike = [userId];
+        if (project.like.includes(userId))
+          project.like.splice(project.like.indexOf(userId), 1)
+      }
+      await project.save();
+      return project;
+    } catch (err) {
+      const message = 'Server error: ' + (err.message || err.name);
+      throw new HttpException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+  }
+
 }

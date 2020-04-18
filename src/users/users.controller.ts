@@ -23,8 +23,7 @@ export class UsersController {
     const usersProfile = await this.usersService.getProfile(userId);
     return res.status(HttpStatus.OK).send(usersProfile);
   }
-
-
+  
   @Post('edit-profile')
   @UseGuards(new AuthGuard)
   async editProfile(
@@ -34,7 +33,5 @@ export class UsersController {
     ): Promise<Response> {
     return res.send(await this.usersService.editProfile(editUser));
   }
-
-  
   
 }

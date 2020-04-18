@@ -7,5 +7,8 @@ export const ProjectSchema = new mongoose.Schema({
   area: [String],
   shortDescription: String,
   description: String,
-  userId: String
+  userId: String,
+  comments: [{userId: String, comment: String}],
+  like: [String],
+  dislike: [String]
 });

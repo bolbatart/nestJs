@@ -7,5 +7,8 @@ export interface IProject extends Document {
     area: string,
     shortDescription: string,
     description: string,
-    userId: string
+    userId: string,
+    comments?: [{userId: string, comment: string}],
+    like?: string[],
+    dislike?: string[]
 }
